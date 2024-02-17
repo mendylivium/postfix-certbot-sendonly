@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+  postfix:
+    build:
+      context: ./dockerfiles
+      dockerfile: postfix.dockerfile
+    container_name: postfix
+    ports:
+      - "8025:25"
+      - "587:587"
+    environment:
+      - DKIM_DOMAIN=waspradi.us
+      - DKIM_SELECTOR=s1
+    volumes:
+      - ./dockerfiles/opendkim/s1.private:/etc/opendkim/keys/s1.private
+      - ./dockerfiles/certs/live/<server>/fullchain.pem:/etc/mendylivium/certs/fullchain.pem
+      - ./dockerfiles/certs/live/<server>/privkey.pem:/etc/mendylivium/certs/privkey.pem
+    restart: always
+
+  certbot:
+    build:
+      context: ./dockerfiles
+      dockerfile: certbot.dockerfile
+    container_name: certbot
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./dockerfiles/certs:/etc/letsencrypt
+    environment:
+      - DOCKMAIL=<email>
+      - DOCKDOMAINS=<server>
+      - DOCKUPGRADE=0
